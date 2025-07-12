@@ -2,70 +2,39 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 public class BoatController : MonoBehaviour
 {
-    public BoatContactPoint[] contactPoints;
-    public bool willDoSuspension;
+    public Rigidbody rb;
 
-    [Header("Car Specs")]
-    public float wheelBase; //all in metres
-    public float rearTrack;
-    public float turnRadius;
-    public float speedMult = 25000;
-
-    [Header("Inputs")]
-    public float steerInput;
-
-    private float ackermannAngleLeft;
-    private float ackermannAngleRight;
-    void Update()
+    private bool RTClicked = false;
+    private bool LTClicked = false;
+    private void Update()
     {
 
-        steerInput = Input.GetAxisRaw("Horizontal");
-
-        if (steerInput > 0) // right
+        if(RTClicked == false && Input.GetAxisRaw("Horizontal") > 0)
         {
-            ackermannAngleLeft = Mathf.Rad2Deg * Mathf.Atan(wheelBase / (turnRadius + (rearTrack / 2))) * steerInput;
-            ackermannAngleRight = Mathf.Rad2Deg * Mathf.Atan(wheelBase / (turnRadius - (rearTrack / 2))) * steerInput;
-        }
-        else if (steerInput < 0) // left
-        {
-            ackermannAngleLeft = Mathf.Rad2Deg * Mathf.Atan(wheelBase / (turnRadius - (rearTrack / 2))) * steerInput;
-            ackermannAngleRight = Mathf.Rad2Deg * Mathf.Atan(wheelBase / (turnRadius + (rearTrack / 2))) * steerInput;
-        }
-        else //0
-        {
-            ackermannAngleLeft = 0;
-            ackermannAngleRight = 0;
+            RTClicked = true;
         }
 
-        bool allWheelsAreOnGround = true;
-        foreach (BoatContactPoint w in contactPoints)
+        if (LTClicked == false && Input.GetAxisRaw("Horizontal") < 0)
         {
+            LTClicked = true;
 
-            if (!w.isOnGround)
-            {
-                allWheelsAreOnGround = false;
-            }
-
-            if (w.wheelFrontLeft)
-            {
-                w.steerAngle = ackermannAngleLeft;
-            }
-            if (w.wheelFrontRight)
-            {
-                w.steerAngle = ackermannAngleRight;
-            }
         }
-        if (allWheelsAreOnGround)
+        if (Input.GetKeyDown(KeyCode.A) || LTClicked) {
+            LTClicked = false;
+            rb.AddForce(transform.forward, ForceMode.VelocityChange);
+            rb.AddTorque(-transform.up / 2, ForceMode.Impulse);
+            rb.AddTorque(transform.forward / 10, ForceMode.Impulse);
+        }
+        else if (Input.GetKeyDown(KeyCode.D) || RTClicked)
         {
-            willDoSuspension = true;
+            RTClicked = false;
+            rb.AddForce(transform.forward, ForceMode.VelocityChange);
+            rb.AddTorque(transform.up / 2, ForceMode.Impulse);
+            rb.AddTorque(-transform.forward / 10, ForceMode.Impulse);
         }
-        else
-        {
-            willDoSuspension = false;
-        }
-
     }
 }
